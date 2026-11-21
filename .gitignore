@@ -14,6 +14,7 @@ jellyfin-addon/qc_result.txt
 # ---- 截图：量大，按需保留 ----
 artifacts/screenshots/
 tv-backup-192.168.1.16/*.png
+shots/
 
 # ---- 系统文件 ----
 .DS_Store

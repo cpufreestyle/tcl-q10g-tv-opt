@@ -10,6 +10,7 @@
 | Kodi 21.3 + JellyCon 读 Jellyfin 库 | ✅ 完成，68 部影片 |
 | Kodi 中文界面（无方块） | ✅ 完成 |
 | Nova 直连 NAS/SMB 播片 | ✅ 完成 |
+| 电视端临时 root | ❌ 常规路径全部无效，只剩 fastboot 刷机 |
 | **电视端点亮杜比视界** | ⚠️ **未完成**，根因已定位 |
 
 ## 核心结论
@@ -31,6 +32,7 @@ Kodi 端的所有 DV 设置项**本来就是正确的**（`allowedhdrformats=0,1
 | [docs/HANDOFF.md](docs/HANDOFF.md) | **完整交接文档** —— 设备信息、凭据、已完成工作、DV 排查全过程、踩坑记录 |
 | [docs/INSTALL-GUIDE.md](docs/INSTALL-GUIDE.md) | 从零复现全部安装步骤 |
 | [docs/DV-DEBUG.md](docs/DV-DEBUG.md) | 杜比视界排查详细记录与证据链 |
+| [docs/ROOT-HOWTO.md](docs/ROOT-HOWTO.md) | 临时 root 可行性排查（结论：只能 fastboot，风险自担） |
 
 ## 目录
 

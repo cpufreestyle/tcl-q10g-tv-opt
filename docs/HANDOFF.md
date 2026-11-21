@@ -8,9 +8,20 @@
 
 ## 0. 一句话现状
 
+> 最后一次更新：2026-11-22 01:00
+
 电视端 **Kodi + JellyCon + Nova 双播放器链路已全部打通**，中文界面完美，NAS 直连 SMB 播片正常；
 **杜比视界仍未点亮**，根因已定位到"电视显示接口只向第三方 App 暴露 SDR"，
 最佳解法不在本仓库，而在已有的 `cpufreestyle/dvpack` 打包链路（见 §6）。
+
+**当前进度（接手从这里开始）**：
+
+| 事项 | 状态 |
+|---|---|
+| 电视重启后 ADB | ✅ 已恢复（`adb devices` 显示 `192.168.1.16:5555 device`） |
+| 临时 root | ❌ 常规路径全部无效，只剩 fastboot 刷机（见 §3.6 / `docs/ROOT-HOWTO.md`） |
+| Nova「杜比视界模式 → 强制」 | 🟡 已进入首选项界面，leanback 磁贴不认 `input tap`，需 DPAD 导航 |
+| 电视自带播放器能否点亮 DV | ⬜ **最高优先级，尚未验证**（这一步决定后面走哪条路） |
 
 ---
 
@@ -20,6 +31,9 @@
 |---|---|
 | 电视型号 | `tcl_m7642`（TCL Q10G） |
 | 系统 | Android 9 / SDK 28 / `PPR2.180905.006.A1` |
+| 固件版本 | `V8-T652T01-LF1V431`（`sitadebug` 自报） |
+| Bootloader | **已解锁**（`ro.boot.verifiedbootstate=orange`，`ro.boot.flash.locked` 为空） |
+| Root | 无。`ro.build.type=user` / `ro.secure=1` / `ro.debuggable=0`，SELinux `Enforcing` |
 | ABI | `armeabi-v7a`（32 位） |
 | 电视 IP | `192.168.1.16` |
 | ADB | `adb connect 192.168.1.16:5555`（电视端需开启无线调试） |
@@ -187,13 +201,36 @@ DV Profile 5 是**单层 DV（无兼容基底层）**，比 Profile 8 更依赖�
 
 1. **Nova 首选项 → 视频 → 「杜比视界模式」** 设为 **「强制」（DOVI_MODE_FORCE）**，
    跳过 `displaySupportsDoVi` 检测，强制请求 DV 解码器。
-   - 状态：**进行中**。已定位到该选项（当前值「自动」），但 Nova 首选项面板用
-     `input tap` 点击无响应，需用 `uiautomator dump` 精确定位后用 DPAD 导航选中。
+   - 状态：**进行中**。选项位置已定位（当前值「自动」）。
+   - ⚠️ **验证过的坑**：Nova 主界面是 leanback 骨架，首选项是**横向磁贴**（`网络 / 首选项 / 传统界面 / 帮助`），
+     `input tap` 点磁贴**不会移动焦点**，屏幕无任何变化。
+     必须用 `input keyevent DPAD_RIGHT/DOWN` 把焦点移过去再 `DPAD_CENTER`。
+   - 当前界面快照：`shots/nova1.png`
    - 同时建议**取消勾选「优先使用另外的视频播放器」**——它会让 Nova 把播放交给外部
      App（Kodi 等），切断自己的 DV 解码链路。
-2. **改走 `cpufreestyle/dvpack` 链路**（更可靠，见 §6）
-3. 若 1、2 都不行，则基本可确认是国行固件对第三方 DV 的限制，放弃第三方播放 DV，
-   改用电视自带播放器 + dvpack 推流
+2. **用电视自带播放器播一个 DV 片源**（**分水岭**）：
+   - 自带播放器能点亮 → 是第三方 App 的通道问题，§6 的 dvpack 路线可走
+   - 自带播放器也不亮 → 电视 DV 侧/片源封装问题，先查电视设置里的 HDR/DV 开关
+3. **改走 `cpufreestyle/dvpack` 链路**（更可靠，见 §6）
+4. 若 1、2、3 都不行，则基本可确认是国行固件对第三方 DV 的限制，放弃第三方播放 DV
+
+### 3.6 关于临时 root（结论：做不到）
+
+完整排查记录见 **`docs/ROOT-HOWTO.md`**（含每一步的原始报错）。摘要：
+
+| 路径 | 结果 |
+|---|---|
+| `adb root` | ❌ `adbd cannot run as root in production builds` |
+| `adb remount` | ❌ 需先 root |
+| setuid 二进制（`busybox` / `fast_connect` / `hostapd_cli`） | ❌ 无可用提权逻辑 |
+| `sitadebug`（MTK 工程后门，setuid root） | ⚠️ **最接近**：确实进了认证流程，但要求 **MTK/TCL 签发的 PKCS7 授权证书**，且 `sitatvservice` 启动本身要 root（死循环） |
+| `run-as`（读 App 私有配置） | ❌ 所有第三方 App 均 `not debuggable`（Nova 的 `shared_prefs` 因此读不到） |
+| Magisk via fastboot | ✅ 理论可行（bootloader 已解锁），但需 **USB 线 + 匹配 boot 镜像**，有变砖风险 |
+
+> **踩过的坑**：为测试 fastboot 执行了 `adb reboot bootloader`，电视进了 fastboot 而**无线 fastboot 未启用**，
+> 远程拉不回来，最后靠**断电重启**恢复。以后要进 fastboot，必须先插 USB 线或确认网络 fastboot 可用。
+
+因此 DV 只能走「应用内开关」或「Mac 侧重封装（dvpack）」两条不需要 root 的路。
 
 ---
 
@@ -201,8 +238,8 @@ DV Profile 5 是**单层 DV（无兼容基底层）**，比 Profile 8 更依赖�
 
 ```
 .
-├── HANDOFF.md                   ← 本文件
 ├── README.md                    ← 项目速览
+├── CREDENTIALS.local.md         ← 明文凭据（已 gitignore，**不随仓库分发**）
 ├── .gitignore
 ├── artifacts/
 │   ├── apk/                     ← Kodi 21/19、Nova 6.6.5、Just Player
@@ -211,15 +248,17 @@ DV Profile 5 是**单层 DV（无兼容基底层）**，比 Profile 8 更依赖�
 │   ├── screenshots/             ← 全流程截图（226 张）
 │   └── scripts/                 ← dv-diagnose.sh 等
 ├── docs/
-│   ├── HANDOFF.md
+│   ├── HANDOFF.md               ← 本文件
 │   ├── INSTALL-GUIDE.md         ← 复现全部安装步骤
-│   └── DV-DEBUG.md              ← DV 排查详细记录
+│   ├── DV-DEBUG.md              ← DV 排查详细记录
+│   └── ROOT-HOWTO.md            ← 临时 root 可行性排查（结论：只能 fastboot）
 ├── jellyfin-addon/              ← JellyCon 插件文件与配置
 │   ├── jellycon-settings.xml    ← 服务器地址/用户名配置
 │   ├── auth.json                ← 免密登录令牌
 │   └── *.py                     ← 拉下来的 JellyCon 源码（查阅用）
 ├── kodi-font/
 │   └── skin.estuary/            ← 替换中文字体后的完整 skin（可直接推送）
+├── shots/                       ← 调试过程中的临时界面截图（未提交）
 ├── tv-backup-192.168.1.16/      ← 电视原始状态备份 + 截图
 └── .workbuddy/memory/           ← 工作日志
 ```
@@ -339,10 +378,11 @@ python -m dvpack serve _out/dv_p7_fix          # 起局域网服务
 
 ## 7. 未完成 / 待确认清单
 
-- [ ] **Nova「杜比视界模式」改为「强制」** —— 已定位位置，UI 自动化未打通（详见 §3.5）
+- [ ] **用电视自带播放器播 DV 片源，确认电视自身能否点亮 DV**（**最高优先级 / 分水岭**）
+- [ ] **Nova「杜比视界模式」改为「强制」** —— 界面已进到首选项，磁贴需 DPAD 导航（见 §3.5）
 - [ ] 取消 Nova「优先使用另外的视频播放器」勾选
-- [ ] 用电视**自带播放器**播 DV 片源，确认电视自身能否点亮 DV（**最高优先级**）
-- [ ] 评估 dvpack 链路迁移到 Android TV（见 §6）
+- [ ] 若 Nova 强制模式无效 → 评估 dvpack 链路迁移到 Android TV（见 §6）
+- [ ] 临时 root：仅在必须改系统分区时才考虑 fastboot + Magisk，需自备 USB 线（见 §3.6）
 - [ ] Jellyfin `kodi` 账号是否需要保留/清理
 - [ ] Nova 设为开机默认播放器 / `movie2` 加为首页快捷方式
 - [ ] JellyCon 在 Kodi 里的媒体库扫描是否需要重建（库名「电影2」中文显示已正常）
@@ -381,4 +421,25 @@ adb -s 192.168.1.16:5555 exec-out screencap -p > out.png
 Mac:    darwin，Python 3 + fontTools（pip install fonttools）
 工具:   adb、ffmpeg/ffprobe（brew）、uiautomator dump（用于精确定位 UI 控件）
 仓库:   git + gh CLI（账号 cpufreestyle 已登录）
+```
+
+---
+
+## 10. 变更记录（时间线）
+
+| 时间 | 事件 |
+|---|---|
+| 11-21 晚 | 备份 → 停用 7 个广告包 → 装 Kodi 21 + JellyCon → 中文界面修复 → 装 Nova 6.6.5 → SMB 直连 NAS → DV 片源可播但不亮标 |
+| 11-21 深夜 | DV 根因定位：`supportedColorModes [0]` 仅 SDR，第三方 App 拿不到 `video/dolby-vision` 通道 |
+| 11-22 00:2x | 交接文档 / 安装指南 / DV 排查记录落盘；仓库 `cpufreestyle/tcl-q10g-tv-opt` 建立 |
+| 11-22 00:4x | 临时 root 排查（`docs/ROOT-HOWTO.md`）：`adb root`、setuid、`sitadebug`、`run-as` 全部无效；测试 fastboot 时 `reboot bootloader` 把电视留在 fastboot |
+| 11-22 00:5x | **电视断电重启恢复**；ADB 未自动回连，手动 `adb connect 192.168.1.16:5555` 成功 |
+| 11-22 01:0x | 进入 Nova leanback 首选项区域，确认 `input tap` 对磁贴无效、改走 DPAD；本文件同步更新 |
+
+### 下次接手的最短路径
+
+```bash
+adb connect 192.168.1.16:5555 && adb devices
+# 1) 先用电视自带播放器播 DV 片源 → 看是否亮标（分水岭）
+# 2) 再试 Nova 强制 DV：DPAD 导航到 首选项 → 视频 → 杜比视界模式 → 强制
 ```

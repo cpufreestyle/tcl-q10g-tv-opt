@@ -1,0 +1,7 @@
+package:com.hikstor.histor.tv
+package:com.xiaodianshi.tv.yst
+package:com.tcl.qiyiguo
+package:com.oumi.utility.media.hub
+package:com.dangbeimarket
+package:com.netease.filmlytv
+package:com.tcl.atomic.servicecenter

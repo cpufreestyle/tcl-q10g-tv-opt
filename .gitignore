@@ -1,0 +1,33 @@
+# ---- 大文件：APK / 字体 / skin（体积大，走 LFS 或不提交）----
+artifacts/apk/
+artifacts/fonts/
+kodi-font/skin.estuary/
+
+# ---- 凭据与令牌：绝不提交 ----
+CREDENTIALS.local.md
+jellyfin-addon/auth.json
+jellyfin-addon/auth_result.json
+jellyfin-addon/qc_secret.txt
+jellyfin-addon/qc_code.txt
+jellyfin-addon/qc_result.txt
+
+# ---- 截图：量大，按需保留 ----
+artifacts/screenshots/
+tv-backup-192.168.1.16/*.png
+
+# ---- 系统文件 ----
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# ---- 临时 ----
+*.log
+*.tmp
+*.raw
+__pycache__/
+.venv/
+venv/
+
+# ---- WorkBuddy 本地状态 ----
+.workbuddy/

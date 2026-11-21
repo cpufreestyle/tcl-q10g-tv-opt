@@ -33,19 +33,35 @@ Kodi 端的所有 DV 设置项**本来就是正确的**（`allowedhdrformats=0,1
 | [docs/INSTALL-GUIDE.md](docs/INSTALL-GUIDE.md) | 从零复现全部安装步骤 |
 | [docs/DV-DEBUG.md](docs/DV-DEBUG.md) | 杜比视界排查详细记录与证据链 |
 | [docs/ROOT-HOWTO.md](docs/ROOT-HOWTO.md) | 临时 root 可行性排查（结论：只能 fastboot，风险自担） |
+| [artifacts/MANIFEST.md](artifacts/MANIFEST.md) | 二进制资源清单（版本 / 来源 / SHA-256） |
+
+## 资源包（APK / 字体 / skin）
+
+仓库只放文本：文档、配置、脚本。**APK、中文字体、改好的 skin 太大且属第三方产物，走 Release 分发**：
+
+**[⬇️ v1.0-assets 资源包](https://github.com/cpufreestyle/tcl-q10g-tv-opt/releases/tag/v1.0-assets)**
+
+| 附件 | 大小 | 内容 |
+|---|---|---|
+| `tcl-q10g-apps.zip` | 135MB | Kodi 21.3 Omega / Kodi 19.4 / Nova 6.6.5 / Just Player 0.217，全 armeabi-v7a + `SHA256SUMS.txt` |
+| `tcl-q10g-kodi-skin-fonts.zip` | 72MB | Noto Sans CJK SC 字体、改好字体的 Estuary skin（252 文件）、guisettings 样本、`dv-diagnose.sh`、JellyCon 插件包 |
+
+校验和与每个 APK 的用途见 [artifacts/MANIFEST.md](artifacts/MANIFEST.md)。资源包内**不含任何凭据**。
 
 ## 目录
 
 ```
-artifacts/apk/         Kodi 21/19、Nova 6.6.5、Just Player 安装包
+artifacts/apk/         Kodi 21/19、Nova 6.6.5、Just Player 安装包（*仅本地 / Release*）
 artifacts/configs/     guisettings.xml 修改样本
-artifacts/fonts/       提取出的中文字体（Noto Sans CJK SC）
-artifacts/screenshots/ 全流程截图
+artifacts/fonts/       提取出的中文字体（Noto Sans CJK SC）（*仅本地 / Release*）
+artifacts/screenshots/ 全流程截图（*仅本地*）
 artifacts/scripts/     诊断脚本
 jellyfin-addon/        JellyCon 插件文件与配置
-kodi-font/skin.estuary/ 替换中文字体后的完整 skin（可直接推送）
+kodi-font/skin.estuary/ 替换中文字体后的完整 skin（*仅本地 / Release*）
 tv-backup-192.168.1.16/ 电视原始状态备份（回滚用）
 ```
+
+带 `*` 的目录被 `.gitignore` 排除，内容见 Release 资源包。
 
 ## 关键凭据位置
 

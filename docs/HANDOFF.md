@@ -22,6 +22,7 @@
 | 临时 root | ❌ 常规路径全部无效，只剩 fastboot 刷机（见 §3.6 / `docs/ROOT-HOWTO.md`） |
 | Nova「杜比视界模式 → 强制」 | 🟡 已进入首选项界面，leanback 磁贴不认 `input tap`，需 DPAD 导航 |
 | 电视自带播放器能否点亮 DV | ⬜ **最高优先级，尚未验证**（这一步决定后面走哪条路） |
+| 仓库归档 | ✅ 文档/配置入库，二进制（APK/字体/skin）走 Release `v1.0-assets`（见 §4.1） |
 
 ---
 
@@ -242,10 +243,11 @@ DV Profile 5 是**单层 DV（无兼容基底层）**，比 Profile 8 更依赖�
 ├── CREDENTIALS.local.md         ← 明文凭据（已 gitignore，**不随仓库分发**）
 ├── .gitignore
 ├── artifacts/
-│   ├── apk/                     ← Kodi 21/19、Nova 6.6.5、Just Player
+│   ├── MANIFEST.md              ← 二进制资源清单（版本/来源/SHA-256）
+│   ├── apk/                     ← 4 个 APK（*gitignore，走 Release）
 │   ├── configs/                 ← guisettings.xml 样本（改前/改后）
-│   ├── fonts/                   ← 提取出的中文字体 NotoSans-Regular.ttf
-│   ├── screenshots/             ← 全流程截图（226 张）
+│   ├── fonts/                   ← 抽出的中文字体（*gitignore，走 Release）
+│   ├── screenshots/             ← 全流程截图 104 张（*gitignore，仅本地）
 │   └── scripts/                 ← dv-diagnose.sh 等
 ├── docs/
 │   ├── HANDOFF.md               ← 本文件
@@ -257,11 +259,24 @@ DV Profile 5 是**单层 DV（无兼容基底层）**，比 Profile 8 更依赖�
 │   ├── auth.json                ← 免密登录令牌
 │   └── *.py                     ← 拉下来的 JellyCon 源码（查阅用）
 ├── kodi-font/
-│   └── skin.estuary/            ← 替换中文字体后的完整 skin（可直接推送）
+│   └── skin.estuary/            ← 替换中文字体后的完整 skin（*gitignore，走 Release）
 ├── shots/                       ← 调试过程中的临时界面截图（未提交）
 ├── tv-backup-192.168.1.16/      ← 电视原始状态备份 + 截图
 └── .workbuddy/memory/           ← 工作日志
 ```
+
+### 4.1 资源分发（二进制不进 git）
+
+仓库只放文本。带 `*` 的目录体积大 / 属第三方产物，统一走 **GitHub Release**：
+
+**<https://github.com/cpufreestyle/tcl-q10g-tv-opt/releases/tag/v1.0-assets>**
+
+| 附件 | 大小 | 内容 |
+|---|---|---|
+| `tcl-q10g-apps.zip` | 135 MB | 4 个 APK（全 armeabi-v7a）+ `MANIFEST.md` + `SHA256SUMS.txt` |
+| `tcl-q10g-kodi-skin-fonts.zip` | 72 MB | Noto CJK 字体、Estuary skin（252 文件）、guisettings 样本、`dv-diagnose.sh`、JellyCon 插件包 |
+
+校验和见 `artifacts/MANIFEST.md`。**Release 与仓库均不含 `auth.json` / `qc_*.txt` / `CREDENTIALS.local.md`。**
 
 ---
 
@@ -435,6 +450,7 @@ Mac:    darwin，Python 3 + fontTools（pip install fonttools）
 | 11-22 00:4x | 临时 root 排查（`docs/ROOT-HOWTO.md`）：`adb root`、setuid、`sitadebug`、`run-as` 全部无效；测试 fastboot 时 `reboot bootloader` 把电视留在 fastboot |
 | 11-22 00:5x | **电视断电重启恢复**；ADB 未自动回连，手动 `adb connect 192.168.1.16:5555` 成功 |
 | 11-22 01:0x | 进入 Nova leanback 首选项区域，确认 `input tap` 对磁贴无效、改走 DPAD；本文件同步更新 |
+| 11-22 01:2x | 仓库迁移收尾：二进制打包为 `tcl-q10g-apps.zip`（135MB）与 `tcl-q10g-kodi-skin-fonts.zip`（72MB），发布 GitHub Release `v1.0-assets`；新增 `artifacts/MANIFEST.md` 记录版本与 SHA-256 |
 
 ### 下次接手的最短路径
 
